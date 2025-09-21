@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Habit Heatmap</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; }
+    h1 { font-size: 16px; margin: 0 0 8px; }
+    .wrap { display: flex; gap: 12px; align-items: flex-start; }
+    .labels { display: grid; grid-template-rows: repeat(7, 14px); gap: 2px; margin-top: 22px; }
+    .labels span { font-size: 10px; color: #666; line-height: 14px; }
+    .grid { display: grid; grid-auto-flow: column; grid-auto-columns: 14px; grid-template-rows: repeat(7, 14px); gap: 2px; }
+    .day { width: 14px; height: 14px; border-radius: 3px; background: #ebedf0; }
+    .lvl-1 { background: #c6e48b; }
+    .lvl-2 { background: #7bc96f; }
+    .lvl-3 { background: #239a3b; }
+    .lvl-4 { background: #196127; }
+    .legend { display: flex; align-items: center; gap: 4px; font-size: 10px; color: #666; margin-top: 8px; }
+    .legend .day { margin-left: 4px; }
+  </style>
+</head>
+<body>
+  <h1>Habit Heatmap</h1>
+
+  <div class="wrap">
+    <div class="labels">
+      <span>Mo</span><span></span><span>Mi</span><span></span><span>Fr</span><span></span><span></span>
+    </div>
+    <div id="grid" class="grid" aria-label="habit heatmap"></div>
+  </div>
+
+  <div class="legend">
+    <span>Weniger</span>
+    <span class="day"></span>
+    <span class="day lvl-1"></span>
+    <span class="day lvl-2"></span>
+    <span class="day lvl-3"></span>
+    <span class="day lvl-4"></span>
+    <span>Mehr</span>
+  </div>
+
+  <script>
+    // === KONFIGURATION ===
+    const WEEKS = 20; // Anzahl sichtbarer Wochen (z. B. 52 für 1 Jahr)
+
+    // Trage deine erledigten Tage hier ein (YYYY-MM-DD).
+    // Du kannst Werte 1..4 für Intensität setzen (z. B. Anzahl erfüllter Habits).
+    const DATA = {
+       '2025-09-21': 1,
+       '2025-09-22': 2,
+    };
+
+    // === Hilfsfunktionen ===
+    const pad = n => String(n).padStart(2,'0');
+    const key = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    function startOfWeek(date) {
+      const d = new Date(date);
+      // Wochenstart Montag (0 = Mo)
+      const day = (d.getDay() + 6) % 7;
+      d.setDate(d.getDate() - day);
+      d.setHours(0,0,0,0);
+      return d;
+    }
+    function addDays(date, n){ const d=new Date(date); d.setDate(d.getDate()+n); return d; }
+
+    // === Startdatum berechnen ===
+    const today = new Date();
+    const lastMonday = startOfWeek(today);
+    const startDate = addDays(lastMonday, -(WEEKS-1)*7);
+
+    // === Render ===
+    const grid = document.getElementById('grid');
+
+    for (let i = 0; i < WEEKS * 7; i++) {
+      const d = addDays(startDate, i);
+      const k = key(d);
+      const val = DATA[k] ? Number(DATA[k]) : 0;
+      const cell = document.createElement('div');
+      cell.className = 'day' + (val ? ` lvl-${Math.max(1, Math.min(4, val))}` : '');
+      cell.title = `${k}${val ? ` • Level ${val}` : ''}`;
+      grid.appendChild(cell);
+    }
+
+    // Tipp: Um "heute erledigt" zu markieren, füge z. B. so hinzu:
+    // DATA[key(new Date())] = 1;  // Danach committen.
+  </script>
+</body>
+</html>
